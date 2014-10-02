@@ -20,22 +20,11 @@
     android:layout_height="match_parent"
     tools:context=".CameraCaptureActivity" >
 
-    <com.tylerjroach.camPreviewSave.AspectFrameLayout
-        android:id="@+id/cameraPreview_afl"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_alignLeft="@+id/toggleRecording_button"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        android:layout_below="@+id/toggleRecording_button"
-        android:layout_centerInParent="true" >
-
         <android.opengl.GLSurfaceView
             android:id="@+id/cameraPreview_surfaceView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="center" />
-    </com.tylerjroach.camPreviewSave.AspectFrameLayout>
 
     <!-- these overlap with the SurfaceView; by default, it's underneath the UI layer -->
 

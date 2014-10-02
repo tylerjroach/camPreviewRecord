@@ -158,7 +158,8 @@ public class CameraCaptureActivity extends Activity
         mGLView.setEGLContextClientVersion(2);     // select GLES 2.0
         mRenderer = new CameraSurfaceRenderer(mCameraHandler, sVideoEncoder, outputFile);
         mGLView.setRenderer(mRenderer);
-        mGLView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+        mGLView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
+
 
         Log.d(TAG, "onCreate complete: " + this);
     }
@@ -167,19 +168,24 @@ public class CameraCaptureActivity extends Activity
     protected void onResume() {
         Log.d(TAG, "onResume -- acquiring camera");
         super.onResume();
-        updateControls();
-        openCamera(1280, 720);      // updates mCameraPreviewWidth/Height
 
-        // Set the preview aspect ratio.
-        AspectFrameLayout layout = (AspectFrameLayout) findViewById(R.id.cameraPreview_afl);
-        layout.setAspectRatio((double) mCameraPreviewWidth / mCameraPreviewHeight);
+        openCamera(1920, 1080);
 
-        mGLView.onResume();
+
+
+
         mGLView.queueEvent(new Runnable() {
             @Override public void run() {
                 mRenderer.setCameraPreviewSize(mCameraPreviewWidth, mCameraPreviewHeight);
             }
         });
+
+        mGLView.onResume();
+
+
+
+       //
+
         Log.d(TAG, "onResume complete: " + this);
     }
 
@@ -187,6 +193,7 @@ public class CameraCaptureActivity extends Activity
     protected void onPause() {
         Log.d(TAG, "onPause -- releasing camera");
         super.onPause();
+
         releaseCamera();
         mGLView.queueEvent(new Runnable() {
             @Override public void run() {
@@ -450,80 +457,6 @@ class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
         mRecordingEnabled = isRecording;
     }
 
-    /**
-     * Changes the filter that we're applying to the camera preview.
-     */
-    public void changeFilterMode(int filter) {
-        mNewFilter = filter;
-    }
-
-    /**
-     * Updates the filter program.
-     */
-    public void updateFilter() {
-        Texture2dProgram.ProgramType programType;
-        float[] kernel = null;
-        float colorAdj = 0.0f;
-
-        Log.d(TAG, "Updating filter to " + mNewFilter);
-        switch (mNewFilter) {
-            case CameraCaptureActivity.FILTER_NONE:
-                programType = Texture2dProgram.ProgramType.TEXTURE_EXT;
-                break;
-            case CameraCaptureActivity.FILTER_BLACK_WHITE:
-                // (In a previous version the TEXTURE_EXT_BW variant was enabled by a flag called
-                // ROSE_COLORED_GLASSES, because the shader set the red channel to the B&W color
-                // and green/blue to zero.)
-                programType = Texture2dProgram.ProgramType.TEXTURE_EXT_BW;
-                break;
-            case CameraCaptureActivity.FILTER_BLUR:
-                programType = Texture2dProgram.ProgramType.TEXTURE_EXT_FILT;
-                kernel = new float[] {
-                        1f/16f, 2f/16f, 1f/16f,
-                        2f/16f, 4f/16f, 2f/16f,
-                        1f/16f, 2f/16f, 1f/16f };
-                break;
-            case CameraCaptureActivity.FILTER_SHARPEN:
-                programType = Texture2dProgram.ProgramType.TEXTURE_EXT_FILT;
-                kernel = new float[] {
-                        0f, -1f, 0f,
-                        -1f, 5f, -1f,
-                        0f, -1f, 0f };
-                break;
-            case CameraCaptureActivity.FILTER_EDGE_DETECT:
-                programType = Texture2dProgram.ProgramType.TEXTURE_EXT_FILT;
-                kernel = new float[] {
-                        -1f, -1f, -1f,
-                        -1f, 8f, -1f,
-                        -1f, -1f, -1f };
-                break;
-            case CameraCaptureActivity.FILTER_EMBOSS:
-                programType = Texture2dProgram.ProgramType.TEXTURE_EXT_FILT;
-                kernel = new float[] {
-                        2f, 0f, 0f,
-                        0f, -1f, 0f,
-                        0f, 0f, -1f };
-                colorAdj = 0.5f;
-                break;
-            default:
-                throw new RuntimeException("Unknown filter mode " + mNewFilter);
-        }
-
-        // Do we need a whole new program?  (We want to avoid doing this if we don't have
-        // too -- compiling a program could be expensive.)
-        if (programType != mFullScreen.getProgram().getProgramType()) {
-            mFullScreen.changeProgram(new Texture2dProgram(programType));
-            // If we created a new program, we need to initialize the texture width/height.
-            mIncomingSizeUpdated = true;
-        }
-
-        // Update the filter kernel (if any).
-        if (kernel != null) {
-            mFullScreen.getProgram().setKernel(kernel, colorAdj);
-        }
-
-        mCurrentFilter = mNewFilter;
-    }
 
     /**
      * Records the size of the incoming camera preview frames.
@@ -572,6 +505,8 @@ class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
 
     @Override
     public void onSurfaceChanged(GL10 unused, int width, int height) {
+
+
         Log.d(TAG, "onSurfaceChanged " + width + "x" + height);
     }
 
@@ -593,7 +528,7 @@ class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
                     Log.d(TAG, "START recording");
                     // start recording
                     mVideoEncoder.startRecording(new TextureMovieEncoder.EncoderConfig(
-                            mOutputFile, 640, 480, 1000000, EGL14.eglGetCurrentContext()));
+                            mOutputFile, 1920, 1280, 10000000, EGL14.eglGetCurrentContext()));
                     mRecordingStatus = RECORDING_ON;
                     break;
                 case RECORDING_RESUMED:
@@ -642,10 +577,7 @@ class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
             Log.i(TAG, "Drawing before incoming texture size set; skipping");
             return;
         }
-        // Update the filter, if necessary.
-        if (mCurrentFilter != mNewFilter) {
-            updateFilter();
-        }
+
         if (mIncomingSizeUpdated) {
             mFullScreen.getProgram().setTexSize(mIncomingWidth, mIncomingHeight);
             mIncomingSizeUpdated = false;
