@@ -338,6 +338,7 @@ public class TextureMovieEncoder implements Runnable {
      */
     private void handleStopRecording() {
         Log.d(TAG, "handleStopRecording");
+        mVideoEncoder.stopRecording();
         releaseEncoder();
     }
 
@@ -390,7 +391,7 @@ public class TextureMovieEncoder implements Runnable {
     }
 
     private void releaseEncoder() {
-        mVideoEncoder.release();
+
         if (mInputWindowSurface != null) {
             mInputWindowSurface.release();
             mInputWindowSurface = null;
