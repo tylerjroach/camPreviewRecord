@@ -20,7 +20,7 @@
     android:layout_height="match_parent"
     tools:context=".CameraCaptureActivity" >
 
-    <com.android.grafika.AspectFrameLayout
+    <com.tylerjroach.camPreviewSave.AspectFrameLayout
         android:id="@+id/cameraPreview_afl"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -35,13 +35,12 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="center" />
-    </com.android.grafika.AspectFrameLayout>
+    </com.tylerjroach.camPreviewSave.AspectFrameLayout>
 
     <!-- these overlap with the SurfaceView; by default, it's underneath the UI layer -->
 
     <Button
         android:id="@+id/toggleRecording_button"
-        style="?android:attr/buttonStyleSmall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/toggleRecordingOn"

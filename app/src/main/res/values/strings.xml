@@ -19,7 +19,7 @@
 
     <!-- TODO: organize this a bit -->
 
-    <string name="app_name">StreamSave</string>
+    <string name="app_name">camPreviewSave</string>
     <string name="about_item">About</string>
     <string name="regenerateContent_item">Regenerate content</string>
     <string name="selectTest_text">Select Test:</string>
@@ -99,6 +99,7 @@
     <string name="tfcZoomLabel">Zoom: </string>
     <string name="tfcSizeLabel">Size: </string>
     <string name="tfcRotateLabel">Rotate: </string>
+
 
 
 </resources>
