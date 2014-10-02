@@ -24,7 +24,7 @@ import android.os.Bundle;
  * Main activity -- entry point from Launcher.
  */
 public class MainActivity extends ListActivity {
-    public static final String TAG = "Grafika";
+    public static final String TAG = "camPreviewStream";
 
 
 

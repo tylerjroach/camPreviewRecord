@@ -23,6 +23,7 @@ import android.opengl.EGL14;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
@@ -142,7 +143,7 @@ public class CameraCaptureActivity extends Activity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera_capture);
 
-        File outputFile = new File(getFilesDir(), "stream.mp4");
+        File outputFile = new File(Environment.getExternalStorageDirectory(), "stream.mp4");
 
 
         // Define a handler that receives camera-control messages from other threads.  All calls
@@ -175,7 +176,8 @@ public class CameraCaptureActivity extends Activity
 
 
         mGLView.queueEvent(new Runnable() {
-            @Override public void run() {
+            @Override
+            public void run() {
                 mRenderer.setCameraPreviewSize(mCameraPreviewWidth, mCameraPreviewHeight);
             }
         });

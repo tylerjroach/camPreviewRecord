@@ -324,7 +324,7 @@ public class TextureMovieEncoder implements Runnable {
      */
     private void handleFrameAvailable(float[] transform, long timestampNanos) {
         if (VERBOSE) Log.d(TAG, "handleFrameAvailable tr=" + transform);
-        mVideoEncoder.drainEncoder(false);
+        mVideoEncoder.startRecording();
         mFullScreen.drawFrame(mTextureId, transform);
 
         drawBox(mFrameNum++);
@@ -338,7 +338,6 @@ public class TextureMovieEncoder implements Runnable {
      */
     private void handleStopRecording() {
         Log.d(TAG, "handleStopRecording");
-        mVideoEncoder.drainEncoder(true);
         releaseEncoder();
     }
 
