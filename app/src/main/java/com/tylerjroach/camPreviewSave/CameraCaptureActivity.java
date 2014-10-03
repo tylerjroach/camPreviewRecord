@@ -20,7 +20,6 @@ import android.app.Activity;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.opengl.EGL14;
-import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.os.Environment;
@@ -420,6 +419,7 @@ class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
             mRecordingStatus = RECORDING_OFF;
         }
 
+
         // Set up the texture blitter that will be used for on-screen display.  This
         // is *not* applied to the recording, because that uses a separate shader.
         mFullScreen = new FullFrameRect(
@@ -438,16 +438,18 @@ class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
     }
 
     @Override
-    public void onSurfaceChanged(GL10 unused, int width, int height) {
+    public void onSurfaceChanged(GL10 gl, int width, int height) {
 
+        //this fixes weird sizing and artifact issue after onpause
+        gl.glViewport(0,0, width, height);
 
         Log.d(TAG, "onSurfaceChanged " + width + "x" + height);
+
     }
 
     @Override
     public void onDrawFrame(GL10 unused) {
         if (VERBOSE) Log.d(TAG, "onDrawFrame tex=" + mTextureId);
-        boolean showBox = false;
 
         // Latch the latest frame.  If there isn't anything new, we'll just re-use whatever
         // was there before.
@@ -462,7 +464,7 @@ class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
                     Log.d(TAG, "START recording");
                     // start recording
                     mVideoEncoder.startRecording(new TextureMovieEncoder.EncoderConfig(
-                            mOutputFile, 1920, 1280, 10000000, EGL14.eglGetCurrentContext()));
+                            mOutputFile, 1920, 1080, 10000000, EGL14.eglGetCurrentContext()));
                     mRecordingStatus = RECORDING_ON;
                     break;
                 case RECORDING_RESUMED:
@@ -521,21 +523,7 @@ class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
         mSurfaceTexture.getTransformMatrix(mSTMatrix);
         mFullScreen.drawFrame(mTextureId, mSTMatrix);
 
-        // Draw a flashing box if we're recording.  This only appears on screen.
-        showBox = (mRecordingStatus == RECORDING_ON);
-        if (showBox && (++mFrameCount & 0x04) == 0) {
-            drawBox();
-        }
+
     }
 
-    /**
-     * Draws a red box in the corner.
-     */
-    private void drawBox() {
-        GLES20.glEnable(GLES20.GL_SCISSOR_TEST);
-        GLES20.glScissor(0, 0, 100, 100);
-        GLES20.glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
-        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
-        GLES20.glDisable(GLES20.GL_SCISSOR_TEST);
-    }
 }

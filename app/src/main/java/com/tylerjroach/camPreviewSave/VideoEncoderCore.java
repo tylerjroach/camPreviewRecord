@@ -76,7 +76,6 @@ public class VideoEncoderCore {
     public static final int AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT;
     private AudioRecord audioRecord;
     private long lastEncodedAudioTimeStamp = 0;
-    long startTime;
     int frameCount = 0;
     boolean eosSentToVideoEncoder = false;
     boolean firstRun = true;
@@ -148,18 +147,22 @@ public class VideoEncoderCore {
 
     public void startRecording() {
 
-
         fullStopReceived = false;
-        drainEncoder(mVideoEncoder, mVideoBufferInfo, mVideoTrackInfo, fullStopReceived);
 
         if (firstRun) {
-
-            firstFrameReady = true;
             setupAudioRecord();
             startAudioRecord();
+            firstFrameReady = true;
+
             startWhen = System.nanoTime();
             firstRun = false;
         }
+
+
+
+        drainEncoder(mVideoEncoder, mVideoBufferInfo, mVideoTrackInfo, fullStopReceived);
+
+
 
     }
 
@@ -423,7 +426,6 @@ public class VideoEncoderCore {
                 }
             }
         }
-        long endTime = System.nanoTime();
     }
 
     private void stopAndReleaseVideoEncoder(){
