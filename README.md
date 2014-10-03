@@ -11,5 +11,5 @@ The code writes to one .mp4 file on external sd that is continually overwritten.
 
 I hope this repo can be of help to someone! Let me know if you have any questions.
 
-https://github.com/google/grafika
+https://github.com/google/grafika <br>
 https://github.com/OnlyInAmerica/HWEncoderExperiments
