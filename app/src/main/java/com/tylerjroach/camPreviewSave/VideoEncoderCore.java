@@ -148,15 +148,16 @@ public class VideoEncoderCore {
 
     public void startRecording() {
 
-        startWhen = System.nanoTime();
+
         fullStopReceived = false;
         drainEncoder(mVideoEncoder, mVideoBufferInfo, mVideoTrackInfo, fullStopReceived);
 
         if (firstRun) {
+
             firstFrameReady = true;
-            if (!firstFrameReady) startTime = System.nanoTime();
             setupAudioRecord();
             startAudioRecord();
+            startWhen = System.nanoTime();
             firstRun = false;
         }
 
@@ -219,6 +220,9 @@ public class VideoEncoderCore {
 
     }
 
+    int audioInputLength;
+    long audioAbsolutePtsUs;
+
     public void sendAudioToEncoder(boolean endOfStream) {
         // send current frame data to encoder
         try {
@@ -227,27 +231,61 @@ public class VideoEncoderCore {
             if (inputBufferIndex >= 0) {
                 ByteBuffer inputBuffer = inputBuffers[inputBufferIndex];
                 inputBuffer.clear();
-                long presentationTimeNs = System.nanoTime();
-                int inputLength =  audioRecord.read(inputBuffer, SAMPLES_PER_FRAME );
-                presentationTimeNs -= (inputLength / SAMPLE_RATE ) / 1000000000;
-                if(inputLength == AudioRecord.ERROR_INVALID_OPERATION)
-                    Log.e(TAG, "Audio read error");
 
-                //long presentationTimeUs = (presentationTimeNs - startWhen) / 1000;
-                long presentationTimeUs = (presentationTimeNs - startWhen) / 1000;
-                if (VERBOSE) Log.i(TAG, "queueing " + inputLength + " audio bytes with pts " + presentationTimeUs);
+                audioInputLength = audioRecord.read(inputBuffer, SAMPLES_PER_FRAME * 2);
+                audioAbsolutePtsUs = (System.nanoTime()) / 1000L;
+
+                // We divide audioInputLength by 2 because audio samples are
+                // 16bit.
+                audioAbsolutePtsUs = getJitterFreePTS(audioAbsolutePtsUs, audioInputLength / 2);
+
+                if(audioInputLength == AudioRecord.ERROR_INVALID_OPERATION)
+                    Log.e(TAG, "Audio read error: invalid operation");
+                if (audioInputLength == AudioRecord.ERROR_BAD_VALUE)
+                    Log.e(TAG, "Audio read error: bad value");
+
                 if (endOfStream) {
                     Log.i(TAG, "EOS received in sendAudioToEncoder");
-                    mAudioEncoder.queueInputBuffer(inputBufferIndex, 0, inputLength, presentationTimeUs, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
+                    mAudioEncoder.queueInputBuffer(inputBufferIndex, 0, audioInputLength, audioAbsolutePtsUs, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
                     eosSentToAudioEncoder = true;
                 } else {
-                    mAudioEncoder.queueInputBuffer(inputBufferIndex, 0, inputLength, presentationTimeUs, 0);
+                    mAudioEncoder.queueInputBuffer(inputBufferIndex, 0, audioInputLength, audioAbsolutePtsUs, 0);
                 }
             }
         } catch (Throwable t) {
             Log.e(TAG, "_offerAudioEncoder exception");
             t.printStackTrace();
         }
+    }
+
+    /**
+     * Ensures that each audio pts differs by a constant amount from the previous one.
+     * @param bufferPts presentation timestamp in us
+     * @param bufferSamplesNum the number of samples of the buffer's frame
+     * @return
+     */
+
+    long startPTS = 0;
+    long totalSamplesNum = 0;
+
+    private long getJitterFreePTS(long bufferPts, long bufferSamplesNum) {
+        long correctedPts = 0;
+        long bufferDuration = (1000000 * bufferSamplesNum) / (SAMPLE_RATE);
+        bufferPts -= bufferDuration; // accounts for the delay of acquiring the audio buffer
+        if (totalSamplesNum == 0) {
+            // reset
+            startPTS = bufferPts;
+            totalSamplesNum = 0;
+        }
+        correctedPts = startPTS +  (1000000 * totalSamplesNum) / (SAMPLE_RATE);
+        if(bufferPts - correctedPts >= 2*bufferDuration) {
+            // reset
+            startPTS = bufferPts;
+            totalSamplesNum = 0;
+            correctedPts = startPTS;
+        }
+        totalSamplesNum += bufferSamplesNum;
+        return correctedPts;
     }
 
     /**
