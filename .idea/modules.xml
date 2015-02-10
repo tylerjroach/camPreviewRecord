@@ -2,8 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/CamPreviewSave.iml" filepath="$PROJECT_DIR$/CamPreviewSave.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/camPreviewSave.iml" filepath="$PROJECT_DIR$/camPreviewSave.iml" />
+      <module fileurl="file://$PROJECT_DIR$/camPreviewRecord.iml" filepath="$PROJECT_DIR$/camPreviewRecord.iml" />
     </modules>
   </component>
 </project>
